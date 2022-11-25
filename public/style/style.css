@@ -1,0 +1,243 @@
+
+*{
+   padding: 0;
+   margin: 0;
+}
+body{
+   font-family: "Poppins", sans-serif;
+   width: 100%;
+   padding: 0;
+   margin: 0;
+   background-color: #e2e8f0;
+}
+
+main{
+   max-width: 1024px;
+   margin: auto;
+}
+
+/* navbar */
+nav{
+   padding: 18px 0;
+   background-color: #FFF;
+}
+nav ul{
+   width: 1024px;
+   margin: auto;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   list-style: none;
+   font-size: 18px;
+}
+nav ul .nav-menu{
+   display: flex;
+   align-items: center;
+}
+nav ul .nav-brand{
+   margin-right: 28px;
+}
+nav ul .nav-menu li{
+   display: flex;
+   align-items: center;
+}
+nav ul .nav-menu .menu-item{
+   margin-right: 14px;
+}
+nav ul .nav-menu li img{
+   width: 42px;
+}
+.active{
+   color: orangered !important;
+}
+nav ul .nav-menu li a{
+   text-decoration: none;
+   color: black;
+   font-size: 18px;
+   font-weight: 600;
+}
+.btn-contact{
+   text-decoration: none;
+   background-color: #0f172a;
+   color: white;
+   font-weight: 600;
+   border: none;
+   padding: 10px 22px;
+   border-radius: 6px;
+   font-size: 15px;
+}
+/* navbar */
+
+
+/* card */
+.card{
+   width: 1024px;
+   margin: 36px auto;
+   padding: 38px 0;
+   background: white;
+   border-radius: 10px;
+   box-shadow: 0 15px 50px -15px rgba(0, 0, 0, 0.3);
+}
+.card-container{
+   padding: 0 48px;
+   margin: auto;
+   text-align: justify;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+}
+
+.left-item{
+   flex-basis: 60%;
+}
+.right-item{
+   flex-basis: 40%;
+}
+.card-content h1{
+   font-size: 28px;
+   margin-bottom: 10px;
+}
+.card-content p{
+   font-size: 14px;
+   line-height: 1.5em;
+   color: #4b5563;
+}
+.card-button{
+   width: 50%;
+   margin-top: 22px;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+}
+.card-button .card-button-contact{
+   text-decoration: none;
+   padding: 10px 22px;
+   background: #0f172a;
+   color: white;  
+   border: none;
+   border-radius: 8px;
+   outline: none;
+}
+.card-button .card-button-download{
+   display: flex;
+   align-items: center;
+}
+.card-button .card-button-download img{
+   margin-left: 12px;
+}
+
+.card-button a{
+   text-decoration: none;
+   color: black;
+   font-weight: 600;
+}
+
+.social-image{
+   width: 35%;
+   margin: 28px 0;
+   display: flex;    
+   align-items: center;
+   justify-content: space-between;
+}
+.social-image img{
+   width: 38px;
+}
+.card-profile{
+   margin-left: 64px;
+   text-align: center;
+   background: white;
+   box-shadow: 0 10px 50px -15px rgba(0, 0, 0, 0.3);
+   border-radius: 8px;
+   overflow: hidden;
+}
+.card-profile img{
+   width: 100%;
+}
+.card-profile .card-profile-content{
+   padding: 14px;
+}
+.card-profile h1{
+   font-size: 22px;
+}
+.card-profile p{
+   font-size: 14px;
+}
+/* card */
+
+
+/* contact  */
+.contact{
+   width: 576px;
+   margin: 64px auto;
+   height: fit-content;
+}
+.contact h1{
+   text-align: center;
+   font-size: 24px;
+   margin-bottom: 18px;
+}
+.contact form{
+   display: flex;
+   flex-direction: column;
+   padding: 38px;
+   background: white;
+   border-radius: 14px;
+   box-shadow: 0 15px 50px -15px rgba(0, 0, 0, 0.3);
+}
+.eror{
+   color: #f43f5e;
+   font-size: 14px;
+}
+.contact form label{
+   margin-top: 14px;
+}
+.contact form input{
+   padding: 12px 16px;
+   border: none;
+   border-radius: 6px;
+   background: #f1f5f9;
+}
+.contact form input:focus{
+   outline: none;
+}
+.contact form label{
+   margin-bottom: 6px;
+}
+.contact form select{
+   padding: 12px 8px;
+   border: none;
+   border-radius: 6px;
+   user-select: none;
+   background: #f1f5f9;
+}
+.contact form select:focus{
+   outline: none;
+}
+.contact form textarea{
+   padding: 14px;
+   border: none;
+   height: 170px;
+   border-radius: 6px;
+   background: #f1f5f9;
+}
+.contact form textarea:focus{
+   outline: none;
+}
+.contact form .btn-submit{
+   width: 100%;
+   margin-top: 14px;
+   display: flex;
+   align-items: center;
+   justify-content: flex-end;
+}
+.contact form .btn-submit button{
+   margin-top: 24px;
+   padding: 10px 22px;
+   border: none;
+   border-radius: 8px;
+   background-color: #0f172a;
+   color: #FFF;
+   font-size: 14px;
+   cursor: pointer;
+}
+/* contact  */
