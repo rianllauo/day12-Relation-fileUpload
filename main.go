@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
+	"myproject-page/connection"
 	"net/http"
 	"strconv"
 
@@ -12,6 +14,8 @@ import (
 
 func main() {
 	route := mux.NewRouter()
+
+	connection.DatabaseConnect()
 
 	route.PathPrefix("/public/").Handler(http.StripPrefix("/public", http.FileServer((http.Dir("./public")))))
 
@@ -29,27 +33,20 @@ func main() {
 }
 
 type Project struct {
-	Id         int
-	Title      string
-	DateStart  string
-	DateEnd    string
-	Content    string
-	NodeJs     string
-	NextJs     string
-	ReactJs    string
-	Javascript string
+	Id          int
+	Title       string
+	DateStart   string
+	DateEnd     string
+	Description string
 }
 
 var projects = []Project{
 	{
-		Title:      "Aplikasi web dumbways",
-		DateStart:  "11 november 2022",
-		DateEnd:    "12 desember 2022",
-		Content:    "lorem ipsum dolor si amet",
-		NodeJs:     "public/img/nodejs.svg",
-		NextJs:     "public/img/nextjs.svg",
-		ReactJs:    "public/img/react.svg",
-		Javascript: "public/img/javascript.svg",
+		Title:       "Aplikasi web dumbways",
+		DateStart:   "11 november 2022",
+		DateEnd:     "12 desember 2022",
+		Description: "lorem ipsum dolor si amet",
+		// NodeJs:        "public/img/nodejs.svg",
 	},
 }
 
@@ -60,58 +57,28 @@ func addProject(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
-	dateStart := r.PostForm.Get("date-start")
-	dateEnd := r.PostForm.Get("date-end")
+	// title := r.PostForm.Get("title")
+	// content := r.PostForm.Get("content")
+	// dateStart := r.PostForm.Get("date-start")
+	// dateEnd := r.PostForm.Get("date-end")
 
-	nodeJs := r.PostForm.Get("nodeJs")
-	nextJs := r.PostForm.Get("nextJs")
-	reactJs := r.PostForm.Get("reactJs")
-	javascript := r.PostForm.Get("javascript")
+	// var newProject = Project{
+	// 	Title:       title,
+	// 	Description: content,
+	// 	DateStart:   dateStart,
+	// 	DateEnd:     dateEnd,
+	// }
 
-	var nodeJsPath = ""
-	var nextJsPath = ""
-	var reactJsPath = ""
-	var javascriptPath = ""
-
-	if nodeJs == "true" {
-		nodeJsPath = "public/img/nodejs.svg"
-	} else {
-		nodeJsPath = "d-none"
+	dataProject, errQuery := connection.Conn.Query(context.Background(), `INSERT INTO public.tb_projects(
+		id, title, description)
+		VALUES ( 'title coba', 'lorem ipsum dolor si amet' )`)
+	if errQuery != nil {
+		fmt.Println("Message : " + errQuery.Error())
+		return
 	}
+	// projects = append(projects, newProject)
 
-	if nextJs == "true" {
-		nextJsPath = "public/img/nextjs.svg"
-	} else {
-		nextJsPath = "d-none"
-	}
-
-	if reactJs == "true" {
-		reactJsPath = "public/img/react.svg"
-	} else {
-		reactJsPath = "d-none"
-	}
-
-	if javascript == "true" {
-		javascriptPath = "public/img/javascript.svg"
-	} else {
-		javascriptPath = "d-none"
-	}
-
-	var newProject = Project{
-		Title:      title,
-		Content:    content,
-		DateStart:  dateStart,
-		DateEnd:    dateEnd,
-		NodeJs:     nodeJsPath,
-		NextJs:     nextJsPath,
-		ReactJs:    reactJsPath,
-		Javascript: javascriptPath,
-	}
-	projects = append(projects, newProject)
-
-	fmt.Println(projects)
+	fmt.Println(dataProject)
 
 	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
@@ -132,17 +99,16 @@ func formEditProject(w http.ResponseWriter, r *http.Request) {
 	for i, data := range projects {
 		if i == index {
 			ProjectEdit = Project{
-				Id:        i,
-				Title:     data.Title,
-				Content:   data.Content,
-				DateStart: data.DateStart,
-				DateEnd:   data.DateEnd,
-				NodeJs:    data.NodeJs,
+				Id:          i,
+				Title:       data.Title,
+				Description: data.Description,
+				DateStart:   data.DateStart,
+				DateEnd:     data.DateEnd,
 			}
 		}
 	}
 
-	fmt.Println(projects)
+	// fmt.Println(projects)
 
 	dataEdit := map[string]interface{}{
 		"Project": ProjectEdit,
@@ -166,15 +132,16 @@ func editProject(w http.ResponseWriter, r *http.Request) {
 	dateEnd := r.PostForm.Get("date-end")
 
 	var newProject = Project{
-		Title:     title,
-		Content:   content,
-		DateStart: dateStart,
-		DateEnd:   dateEnd,
+		Title:       title,
+		Description: content,
+		DateStart:   dateStart,
+		DateEnd:     dateEnd,
 	}
 
 	// projects = append(projects, newProject)
 	projects[index] = newProject
 
+	fmt.Println(index)
 	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
 
@@ -187,11 +154,35 @@ func home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataProject := map[string]interface{}{
-		"Projects": projects,
+	dataProject, errQuery := connection.Conn.Query(context.Background(), "SELECT id, title, description FROM tb_projects")
+	if errQuery != nil {
+		fmt.Println("Message : " + errQuery.Error())
+		return
 	}
 
-	tmpt.Execute(w, dataProject)
+	var result []Project
+
+	for dataProject.Next() {
+		var each = Project{}
+
+		err := dataProject.Scan(&each.Id, &each.Title, &each.Description)
+		if err != nil {
+			fmt.Println("Message : " + err.Error())
+			return
+		}
+
+		result = append(result, each)
+	}
+
+	resData := map[string]interface{}{
+		"Projects": result,
+	}
+
+	// dataProject := map[string]interface{}{
+	// 	"Projects": projects,
+	// }
+
+	tmpt.Execute(w, resData)
 }
 
 func formProject(w http.ResponseWriter, r *http.Request) {
@@ -222,11 +213,10 @@ func projectDetail(w http.ResponseWriter, r *http.Request) {
 	for index, data := range projects {
 		if index == id {
 			ProjectDetail = Project{
-				Title:     data.Title,
-				Content:   data.Content,
-				DateStart: data.DateStart,
-				DateEnd:   data.DateEnd,
-				NodeJs:    data.NodeJs,
+				Title:       data.Title,
+				Description: data.Description,
+				DateStart:   data.DateStart,
+				DateEnd:     data.DateEnd,
 			}
 		}
 	}
