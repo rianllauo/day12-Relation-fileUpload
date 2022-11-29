@@ -105,10 +105,10 @@
          <div class="card" style="width: 20rem;">
             <img src="public/img/content.jpg" class="card-img-top" alt="content">
             <div class="card-body fs-6">
-               <a href="/project-detail/{{$index}}" class="card-title fs-5">
+               <a href="/project-detail/{{$data.ID}}" class="card-title fs-5">
                   {{$data.Title}}
                </a>
-               <p >Durasi: 3 Bulan</p>
+               <p>Durasi : 1 Month</p>
                <p class="card-text">
                   {{$data.Description}}
                </p>
@@ -119,8 +119,8 @@
                   <img src="" class="" style="width: 28px;" alt="">   
                </div>
                <div class="d-flex justify-content-between gap-2 mt-3">
-                  <a href="/edit-project/{{$index}}" class="btn btn-primary flex-fill">Edit</a>
-                  <a href="/delete-project/{{$index}}" class="btn btn-danger flex-fill">Delete</a>
+                  <a href="/edit-project/{{$data.ID}}" class="btn btn-primary flex-fill">Edit</a>
+                  <a href="/delete-project/{{$data.ID}}" class="btn btn-danger flex-fill">Delete</a>
                </div>
             </div>
          </div>

@@ -34,7 +34,7 @@
 
 
    <!-- form -->
-   <form class="container w-50 mt-5" action="/edit-project/{{.Project.Id}}" method="POST">
+   <form class="container w-50 mt-5" action="/edit-project/{{.Project.ID}}" method="POST">
       <h1 class="fs-4">Add My Project</h1>
 
       <div class="mb-3 mt-4">
@@ -45,17 +45,17 @@
       <div class="row">
          <div class="col">
             <label for="" class="form-label">Start Date</label>
-            <input name="date-start" type="date" class="form-control" placeholder="First name" aria-label="First name" value={{.Project.DateStart}}>
+            <input name="date-start" type="date" class="form-control" placeholder="First name" aria-label="First name" value={{.Project.Format_date_start}}>
          </div>
          <div class="col">
             <label for="" class="form-label">End Date</label>
-            <input name="date-end" type="date" class="form-control" placeholder="Last name" aria-label="Last name" value={{.Project.DateEnd}}>
+            <input name="date-end" type="date" class="form-control" placeholder="Last name" aria-label="Last name" value={{.Project.Format_date_end}}>
          </div>
       </div>
 
       <div class="mt-3">
          <label for="floatingTextarea2" class="form-label">Content</label>
-         <textarea name="content" class="form-control"  id="floatingTextarea2" style="height: 100px">{{.Project.Content}}</textarea>
+         <textarea name="content" class="form-control"  id="floatingTextarea2" style="height: 100px">{{.Project.Description}}</textarea>
       </div>
 
       <div class="mt-3">
@@ -63,21 +63,21 @@
             <label for="">Technologies</label>
          </div>         
          <div class="form-check form-check-inline">
-            <input name="nodeJs" class="form-check-input" type="checkbox" id="inlineCheckbox1" value="true"  {{.Project.NodeJsChecked}}>
+            <input name="nodeJs" class="form-check-input" type="checkbox" id="inlineCheckbox1" value="true"  >
             
             <label class="form-check-label" for="inlineCheckbox1">Node Js</label>
          </div>
          <div class="form-check form-check-inline">
-            <input name="nextJs" class="form-check-input" type="checkbox" id="inlineCheckbox2" value="true" {{.Project.NextJsChecked}}>
+            <input name="nextJs" class="form-check-input" type="checkbox" id="inlineCheckbox2" value="true" >
             <label class="form-check-label" for="inlineCheckbox2">Next Js</label>
          </div>
          <div></div>
          <div class="form-check form-check-inline">
-            <input name="reactJs" class="form-check-input" type="checkbox" id="inlineCheckbox1" value="true" {{.Project.ReactJsChecked}}>
+            <input name="reactJs" class="form-check-input" type="checkbox" id="inlineCheckbox1" value="true" >
             <label class="form-check-label" for="inlineCheckbox1">React Js</label>
          </div>
          <div class="form-check form-check-inline">
-            <input name="javascript" class="form-check-input" type="checkbox" id="inlineCheckbox2" value="true" {{.Project.JavascriptChecked}}>
+            <input name="javascript" class="form-check-input" type="checkbox" id="inlineCheckbox2" value="true" >
             <label class="form-check-label" for="inlineCheckbox2">Javascript</label>
          </div>
       </div>
