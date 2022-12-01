@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"myproject-page/connection"
 	"net/http"
 	"strconv"
@@ -66,19 +67,20 @@ type Project struct {
 	FlashData     string
 
 	//card project struct
-	ID                     int
-	Title                  string
-	DateStart              time.Time
-	DateEnd                time.Time
-	Format_date_start      string
-	Format_date_start_edit string
-	Format_date_end        string
-	Description            string
-	Technologies           []string
-	NodeJs                 string
-	ReactJs                string
-	NextJs                 string
-	Javascript             string
+	ID                int
+	Title             string
+	DateStart         time.Time
+	DateEnd           time.Time
+	Duration          string
+	Month             float64
+	Format_date_start string
+	Format_date_end   string
+	Description       string
+	Technologies      []string
+	NodeJs            string
+	ReactJs           string
+	NextJs            string
+	Javascript        string
 }
 
 var DataFlash = Project{
@@ -111,28 +113,46 @@ func home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// for i := 0; i < len(each.Technologies); i++ {
-		// if each.Technologies[0] == "true" {
-		// 	each.NodeJs = "nodejs.svg"
-		// }
-		// if each.Technologies[1] == "true" {
-		// 	each.ReactJs = "react.svg"
-		// }
-		// if each.Technologies[2] == "true" {
-		// 	each.NextJs = "nextjs.svg"
-		// }
-		// if each.Technologies[3] == "true" {
-		// 	each.Javascript = "javascript.svg"
-		// }
-		//  = each.Technologies[0]
-		// }
+		diff := each.DateEnd.Sub(each.DateStart)
+		days := diff.Hours() / 24
+		month := math.Floor(diff.Hours() / 24 / 30)
 
-		// fmt.Println(each.Technologies[0])
+		// strDays := "Days"
+		dy := strconv.FormatFloat(days, 'f', 0, 64)
+		mo := strconv.FormatFloat(month, 'f', 0, 64)
+
+		if days < 30 {
+			each.Duration = dy + " Days"
+		} else if days > 30 {
+			each.Duration = mo + " Month"
+		}
+
+		if each.Technologies[0] == "nodejs" {
+			each.NodeJs = "nodejs.svg"
+		} else {
+			each.NodeJs = "d-none"
+		}
+		if each.Technologies[1] == "nextjs" {
+			each.NextJs = "nextjs.svg"
+		} else {
+			each.NextJs = "d-none"
+		}
+		if each.Technologies[2] == "react" {
+			each.ReactJs = "react.svg"
+		} else {
+			each.ReactJs = "d-none"
+		}
+		if each.Technologies[3] == "javascript" {
+			each.Javascript = "javascript.svg"
+		} else {
+			each.Javascript = "d-none"
+		}
+
+		// fmt.Println(each.Technologies)
 
 		each.Format_date_start = each.DateStart.Format("2 January 2006")
 		each.Format_date_end = each.DateEnd.Format("2 January 2006")
 		result = append(result, each)
-
 	}
 
 	// sessions
@@ -229,7 +249,6 @@ func addProject(w http.ResponseWriter, r *http.Request) {
 	javascript := r.PostForm.Get("javascript")
 
 	checked := []string{
-
 		nodeJs,
 		nextJs,
 		reactJs,
@@ -373,7 +392,37 @@ func contact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpt.Execute(w, nil)
+	// sessions
+	var store = sessions.NewCookieStore([]byte("SESSIONS_ID"))
+	session, _ := store.Get(r, "SESSIONS_ID")
+
+	if session.Values["IsLogin"] != true {
+		DataFlash.IsLogin = false
+	} else {
+		DataFlash.IsLogin = session.Values["IsLogin"].(bool)
+		DataFlash.UserName = session.Values["Names"].(string)
+	}
+
+	fm := session.Flashes("message")
+
+	var flashes []string
+
+	if len(fm) > 0 {
+		session.Save(r, w)
+
+		for _, fl := range fm {
+			flashes = append(flashes, fl.(string))
+		}
+	}
+
+	DataFlash.FlashData = strings.Join(flashes, "")
+
+	Data := map[string]interface{}{
+		"DataFlash": DataFlash,
+		// "DataFlash": DataFlash,
+	}
+
+	tmpt.Execute(w, Data)
 }
 
 func formRegister(w http.ResponseWriter, r *http.Request) {
@@ -461,6 +510,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(user)
 	session.Values["IsLogin"] = true
 	session.Values["Names"] = user.Name
 	session.Options.MaxAge = 10800

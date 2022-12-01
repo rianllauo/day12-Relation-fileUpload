@@ -44,9 +44,6 @@
                   {{end}}   
                </div>
             </div>
-
-           
-
          </div>
       </nav>
       <!-- navbar -->
@@ -129,21 +126,25 @@
                <a href="/project-detail/{{$data.ID}}" class="card-title fs-5">
                   {{$data.Title}}
                </a>
-               <p>Durasi : 1 Month</p>
+               
+               <p>Durasi : {{$data.Duration}}</p>
+               <!-- <p>Durasi : {{$data.Month}} Month </p>? -->
+
+
                <p class="card-text">
                   {{$data.Description}}
                </p>
 
                <p>
-                  {{$data.Technologies}}
+                  <!-- {{$data.Technologies}} -->
                </p>
 
                
                <div class="d-flex gap-2">
-                  <img src="public/img/{{$data.NodeJs}}" class="" style="width: 28px;" alt="" >
-                  <img src="public/img/{{$data.ReactJs}}" class="" style="width: 28px;" alt="">
-                  <img src="" class="" style="width: 28px;" alt="">
-                  <img src="" class="" style="width: 28px;" alt="">   
+                  <img src="public/img/{{$data.NodeJs}}" class="{{$data.NodeJs}}" style="width: 28px;"  alt="" >
+                  <img src="public/img/{{$data.NextJs}}" class="{{$data.NextJs}}"  style="width: 28px;" alt="">
+                  <img src="public/img/{{$data.ReactJs}}" class="{{$data.ReactJs}}" style="width: 28px;" alt="">
+                  <img src="public/img/{{$data.Javascript}}" class="{{$data.Javascript}}" style="width: 28px;" alt="">   
                </div>
                <div class="d-flex justify-content-between gap-2 mt-3">
                   <a href="/edit-project/{{$data.ID}}" class="btn btn-primary flex-fill">Edit</a>
