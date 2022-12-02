@@ -22,7 +22,7 @@
             <div class="collapse navbar-collapse d-flex justify-content-between align-items-center" id="navbarNavAltMarkup">
                <div class="navbar-nav">
                   <a class="nav-link fw-semibold active" aria-current="page" href="/">Home</a>
-                  {{if .DataFlash.IsLogin}}
+                  {{if .Data.IsLogin}}
                   <a class="nav-link fw-semibold" href="/form-project">Add Project</a>
                   {{else}}
                   <div></div>
@@ -30,9 +30,9 @@
                   <a href="/contact" class="nav-link fw-semibold">Contact Me</a>
                </div>
                <div class="d-flex align-items-center">
-                  {{if .DataFlash.IsLogin}}
+                  {{if .Data.IsLogin}}
                      <div class="d-flex align-items-center">
-                        <p class="mb-0 me-3 fs-6">Hello, {{.DataFlash.UserName}}</p>
+                        <p class="mb-0 me-3 fs-6">Hello, {{.Data.UserName}}</p>
                         <a href="/logout" class="link-danger fw-semibold">Logout</a>
                      </div>
                     
@@ -48,9 +48,9 @@
       </nav>
       <!-- navbar -->
 
-      {{if .DataFlash.FlashData}}
+      {{if .Data.FlashData}}
       <div class="position-absolute top-0 end-0 alert alert-success alert-dismissible fade show" role="alert" style="width: 300px; margin-top:70px; margin-right: 10px;">
-         {{.DataFlash.FlashData}}
+         {{.Data.FlashData}}
          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {{end}}
@@ -61,7 +61,6 @@
          <div class="card-container-profile">
 
             <div class="card-container">
-
                <div class="left-item">
                   <div class="card-content">
                      <h1>Hi Welcome to my hut</h1>
@@ -135,21 +134,19 @@
                   {{$data.Description}}
                </p>
 
-               <p>
-                  <!-- {{$data.Technologies}} -->
-               </p>
-
-               
                <div class="d-flex gap-2">
                   <img src="public/img/{{$data.NodeJs}}" class="{{$data.NodeJs}}" style="width: 28px;"  alt="" >
                   <img src="public/img/{{$data.NextJs}}" class="{{$data.NextJs}}"  style="width: 28px;" alt="">
                   <img src="public/img/{{$data.ReactJs}}" class="{{$data.ReactJs}}" style="width: 28px;" alt="">
                   <img src="public/img/{{$data.Javascript}}" class="{{$data.Javascript}}" style="width: 28px;" alt="">   
                </div>
+
+               {{if $data.IsLogin}}
                <div class="d-flex justify-content-between gap-2 mt-3">
                   <a href="/edit-project/{{$data.ID}}" class="btn btn-primary flex-fill">Edit</a>
                   <a href="/delete-project/{{$data.ID}}" class="btn btn-danger flex-fill">Delete</a>
                </div>
+               {{end}}
             </div>
          </div>
         

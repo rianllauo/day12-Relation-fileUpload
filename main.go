@@ -45,12 +45,17 @@ func main() {
 	http.ListenAndServe("localhost:5000", route)
 }
 
-// type MetaData struct {
-// }
+type MetaData struct {
+	Id        int
+	Title     string
+	IsLogin   bool
+	UserName  string
+	FlashData string
+}
 
-// var DataFlash = MetaData{
-// 	TitleSessions: "Project Web",
-// }
+var Data = MetaData{
+	Title: "Personal Web",
+}
 
 type User struct {
 	Id       int
@@ -60,12 +65,6 @@ type User struct {
 }
 
 type Project struct {
-	// sessions struct
-	TitleSessions string
-	IsLogin       bool
-	UserName      string
-	FlashData     string
-
 	//card project struct
 	ID                int
 	Title             string
@@ -81,10 +80,7 @@ type Project struct {
 	ReactJs           string
 	NextJs            string
 	Javascript        string
-}
-
-var DataFlash = Project{
-	TitleSessions: "Project Web",
+	IsLogin           bool
 }
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -95,6 +91,31 @@ func home(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Message :" + err.Error()))
 		return
 	}
+
+	// sessions
+	var store = sessions.NewCookieStore([]byte("SESSIONS_ID"))
+	session, _ := store.Get(r, "SESSIONS_ID")
+
+	if session.Values["IsLogin"] != true {
+		Data.IsLogin = false
+	} else {
+		Data.IsLogin = session.Values["IsLogin"].(bool)
+		Data.UserName = session.Values["Names"].(string)
+	}
+
+	fm := session.Flashes("message")
+
+	var flashes []string
+
+	if len(fm) > 0 {
+		session.Save(r, w)
+
+		for _, fl := range fm {
+			flashes = append(flashes, fl.(string))
+		}
+	}
+
+	Data.FlashData = strings.Join(flashes, "")
 
 	dataProject, errQuery := connection.Conn.Query(context.Background(), "SELECT id, title, start_date, end_date, description, technologies FROM tb_projects")
 	if errQuery != nil {
@@ -115,9 +136,8 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 		diff := each.DateEnd.Sub(each.DateStart)
 		days := diff.Hours() / 24
-		month := math.Floor(diff.Hours() / 24 / 30)
+		month := math.Floor(days / 30)
 
-		// strDays := "Days"
 		dy := strconv.FormatFloat(days, 'f', 0, 64)
 		mo := strconv.FormatFloat(month, 'f', 0, 64)
 
@@ -127,6 +147,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 			each.Duration = mo + " Month"
 		}
 
+		// checked condition
 		if each.Technologies[0] == "nodejs" {
 			each.NodeJs = "nodejs.svg"
 		} else {
@@ -148,43 +169,25 @@ func home(w http.ResponseWriter, r *http.Request) {
 			each.Javascript = "d-none"
 		}
 
-		// fmt.Println(each.Technologies)
+		fmt.Println(diff)
 
 		each.Format_date_start = each.DateStart.Format("2 January 2006")
 		each.Format_date_end = each.DateEnd.Format("2 January 2006")
+
+		if session.Values["IsLogin"] != true {
+			each.IsLogin = false
+		} else {
+			each.IsLogin = session.Values["IsLogin"].(bool)
+		}
+
 		result = append(result, each)
 	}
 
-	// sessions
-	var store = sessions.NewCookieStore([]byte("SESSIONS_ID"))
-	session, _ := store.Get(r, "SESSIONS_ID")
-
-	if session.Values["IsLogin"] != true {
-		DataFlash.IsLogin = false
-	} else {
-		DataFlash.IsLogin = session.Values["IsLogin"].(bool)
-		DataFlash.UserName = session.Values["Names"].(string)
-	}
-
-	fm := session.Flashes("message")
-
-	var flashes []string
-
-	if len(fm) > 0 {
-		session.Save(r, w)
-
-		for _, fl := range fm {
-			flashes = append(flashes, fl.(string))
-		}
-	}
-
-	DataFlash.FlashData = strings.Join(flashes, "")
-
 	resData := map[string]interface{}{
-		"Projects":  result,
-		"DataFlash": DataFlash,
+		"Projects": result,
+		"Data":     Data,
 	}
-
+	fmt.Println(result)
 	tmpt.Execute(w, resData)
 
 }
@@ -203,10 +206,10 @@ func formProject(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "SESSIONS_ID")
 
 	if session.Values["IsLogin"] != true {
-		DataFlash.IsLogin = false
+		Data.IsLogin = false
 	} else {
-		DataFlash.IsLogin = session.Values["IsLogin"].(bool)
-		DataFlash.UserName = session.Values["Names"].(string)
+		Data.IsLogin = session.Values["IsLogin"].(bool)
+		Data.UserName = session.Values["Names"].(string)
 	}
 
 	fm := session.Flashes("message")
@@ -221,10 +224,10 @@ func formProject(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	DataFlash.FlashData = strings.Join(flashes, "")
+	Data.FlashData = strings.Join(flashes, "")
 
 	Data := map[string]interface{}{
-		"DataFlash": DataFlash,
+		"DataFlash": Data,
 		// "DataFlash": DataFlash,
 	}
 
@@ -351,20 +354,57 @@ func projectDetail(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := strconv.Atoi(mux.Vars(r)["id"])
 
-	var ProjectDetail = Project{}
+	var each = Project{}
 
-	err = connection.Conn.QueryRow(context.Background(), "SELECT id, title, start_date, end_date, description FROM tb_projects WHERE id = $1", id).Scan(&ProjectDetail.ID, &ProjectDetail.Title, &ProjectDetail.DateStart, &ProjectDetail.DateEnd, &ProjectDetail.Description)
+	err = connection.Conn.QueryRow(context.Background(), "SELECT id, title, start_date, end_date, description, technologies FROM tb_projects WHERE id = $1", id).Scan(&each.ID, &each.Title, &each.DateStart, &each.DateEnd, &each.Description, &each.Technologies)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("message : " + err.Error()))
 	}
 
-	ProjectDetail.Format_date_start = ProjectDetail.DateStart.Format("2 January 2006")
-	ProjectDetail.Format_date_end = ProjectDetail.DateEnd.Format("2 January 2006")
+	diff := each.DateEnd.Sub(each.DateStart)
+	days := diff.Hours() / 24
+	month := math.Floor(days / 30)
+
+	dy := strconv.FormatFloat(days, 'f', 0, 64)
+	mo := strconv.FormatFloat(month, 'f', 0, 64)
+
+	if days < 30 {
+		each.Duration = dy + " Days"
+	} else if days > 30 {
+		each.Duration = mo + " Month"
+	}
+
+	// checked condition
+	if each.Technologies[0] == "nodejs" {
+		each.NodeJs = "nodejs.svg"
+	} else {
+		each.NodeJs = "d-none"
+	}
+	if each.Technologies[1] == "nextjs" {
+		each.NextJs = "nextjs.svg"
+	} else {
+		each.NextJs = "d-none"
+	}
+	if each.Technologies[2] == "react" {
+		each.ReactJs = "react.svg"
+	} else {
+		each.ReactJs = "d-none"
+	}
+	if each.Technologies[3] == "javascript" {
+		each.Javascript = "javascript.svg"
+	} else {
+		each.Javascript = "d-none"
+	}
+
+	fmt.Println(diff)
+
+	each.Format_date_start = each.DateStart.Format("2 January 2006")
+	each.Format_date_end = each.DateEnd.Format("2 January 2006")
 
 	dataDetail := map[string]interface{}{
-		"Project": ProjectDetail,
+		"Project": each,
 	}
 
 	tmpt.Execute(w, dataDetail)
@@ -397,10 +437,10 @@ func contact(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "SESSIONS_ID")
 
 	if session.Values["IsLogin"] != true {
-		DataFlash.IsLogin = false
+		Data.IsLogin = false
 	} else {
-		DataFlash.IsLogin = session.Values["IsLogin"].(bool)
-		DataFlash.UserName = session.Values["Names"].(string)
+		Data.IsLogin = session.Values["IsLogin"].(bool)
+		Data.UserName = session.Values["Names"].(string)
 	}
 
 	fm := session.Flashes("message")
@@ -415,10 +455,10 @@ func contact(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	DataFlash.FlashData = strings.Join(flashes, "")
+	Data.FlashData = strings.Join(flashes, "")
 
 	Data := map[string]interface{}{
-		"DataFlash": DataFlash,
+		"DataFlash": Data,
 		// "DataFlash": DataFlash,
 	}
 

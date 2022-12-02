@@ -53,7 +53,7 @@
                   </div>
                   <div class="d-flex align-items-center">
                      <img class="me-1" src="public/img/clock.png" alt="" width="32px" height="32px">
-                     <p class="m-0">1 Month</p>
+                     <p class="m-0">{{.Project.Duration}}</p>
                   </div>
                </div>
    
@@ -62,22 +62,22 @@
                   
                   <div class="d-flex flex-column justify-content-center">
                      <div class="d-flex align-items-center mb-2">
-                        <div class="d-flex align-items-center me-4">
-                           <img class="me-1" src="public/img/react.svg" alt="" width="32px" height="32px">
-                           <p class="m-0">React Js</p>
+                        <div class="d-flex align-items-center me-4 {{.Project.ReactJs}}">
+                           <img class="me-1" src="public/img/{{.Project.ReactJs}}" alt="" width="32px" height="32px">
+                           <p class="m-0">ReactJs</p>
                         </div>
-                        <div class="d-flex align-items-center">
-                           <img class="me-1" src="public/img/nodejs.svg" alt="" width="32px" height="32px">
-                           <p class="m-0">Node Js</p>
+                        <div class="d-flex align-items-center {{.Project.NodeJs}}">
+                           <img class="me-1" src="public/img/{{.Project.NodeJs}}" alt="" width="32px" height="32px">
+                           <p class="m-0">NodeJs</p>
                         </div>
                      </div>
-                     <div class="d-flex align-items-center">
-                        <div class="d-flex align-items-center me-2">
-                           <img class="me-1" src="public/img/javascript.svg" alt="" width="32px" height="32px">
+                     <div class="d-flex align-items-center ">
+                        <div class="d-flex align-items-center me-2 {{.Project.Javascript}}">
+                           <img class="me-1" src="public/img/{{.Project.Javascript}}" alt="" width="32px" height="32px">
                            <p class="m-0">Javascript</p>
                         </div>
-                        <div class="d-flex align-items-center">
-                           <img class="me-1" src="public/img/nextjs.svg" alt="" width="32px" height="32px">
+                        <div class="d-flex align-items-center {{.Project.NextJs}}">
+                           <img class="me-1" src="public/img/{{.Project.NextJs}}" alt="" width="32px" height="32px">
                            <p class="m-0">Next Js</p>
                         </div>
                      </div>
@@ -92,7 +92,7 @@
 
          <div class="mt-5 container">
             <p>
-               {{.Project.Content}}
+               {{.Project.Description}}
             </p>
          </div>
       </div>
