@@ -120,12 +120,13 @@
          {{range $index, $data := .Projects}}
 
          <div class="card" style="width: 20rem;">
-            <img src="public/img/content.jpg" class="card-img-top" alt="content">
+            <img src="/uploads/{{$data.Image}}" class="card-img-top" alt="content">
             <div class="card-body fs-6">
                <a href="/project-detail/{{$data.ID}}" class="card-title fs-5">
                   {{$data.Title}}
                </a>
                
+               <p>Creator : {{$data.Creator}}</p>
                <p>Durasi : {{$data.Duration}}</p>
                <!-- <p>Durasi : {{$data.Month}} Month </p>? -->
 

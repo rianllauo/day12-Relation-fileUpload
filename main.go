@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"myproject-page/connection"
+	"myproject-page/middleware"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,12 +24,14 @@ func main() {
 	connection.DatabaseConnect()
 
 	route.PathPrefix("/public/").Handler(http.StripPrefix("/public", http.FileServer((http.Dir("./public")))))
+	route.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads/"))))
 
 	route.HandleFunc("/", home).Methods("GET")
 	route.HandleFunc("/form-project", formProject).Methods("GET")
 	route.HandleFunc("/contact", contact).Methods("GET")
 	route.HandleFunc("/project-detail/{id}", projectDetail).Methods("GET")
-	route.HandleFunc("/add-project", addProject).Methods("POST")
+	route.HandleFunc("/", middleware.UploadFile(addProject)).Methods("POST")
+	// route.HandleFunc("/add-project", addProject).Methods("POST")
 	route.HandleFunc("/delete-project/{index}", deleteProject).Methods("GET")
 	route.HandleFunc("/edit-project/{index}", formEditProject).Methods("GET")
 	route.HandleFunc("/edit-project/{index}", editProject).Methods("POST")
@@ -68,6 +71,7 @@ type Project struct {
 	//card project struct
 	ID                int
 	Title             string
+	Creator           string
 	DateStart         time.Time
 	DateEnd           time.Time
 	Duration          string
@@ -75,6 +79,7 @@ type Project struct {
 	Format_date_start string
 	Format_date_end   string
 	Description       string
+	Image             string
 	Technologies      []string
 	NodeJs            string
 	ReactJs           string
@@ -82,6 +87,13 @@ type Project struct {
 	Javascript        string
 	IsLogin           bool
 }
+
+type Login struct {
+	Er           string
+	InputInvalid string
+}
+
+var DataErr = Login{}
 
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
@@ -117,7 +129,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 	Data.FlashData = strings.Join(flashes, "")
 
-	dataProject, errQuery := connection.Conn.Query(context.Background(), "SELECT id, title, start_date, end_date, description, technologies FROM tb_projects")
+	dataProject, errQuery := connection.Conn.Query(context.Background(), "SELECT tb_projects.id, title, start_date, end_date, description, technologies, image, tb_user.name as creator FROM tb_projects LEFT JOIN tb_user ON tb_projects.user_id = tb_user.id ORDER BY id DESC")
 	if errQuery != nil {
 		fmt.Println("Message : " + errQuery.Error())
 		return
@@ -128,7 +140,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	for dataProject.Next() {
 		var each = Project{}
 
-		err := dataProject.Scan(&each.ID, &each.Title, &each.DateStart, &each.DateEnd, &each.Description, &each.Technologies)
+		err := dataProject.Scan(&each.ID, &each.Title, &each.DateStart, &each.DateEnd, &each.Description, &each.Technologies, &each.Image, &each.Creator)
 		if err != nil {
 			fmt.Println("Message : " + err.Error())
 			return
@@ -169,8 +181,6 @@ func home(w http.ResponseWriter, r *http.Request) {
 			each.Javascript = "d-none"
 		}
 
-		fmt.Println(diff)
-
 		each.Format_date_start = each.DateStart.Format("2 January 2006")
 		each.Format_date_end = each.DateEnd.Format("2 January 2006")
 
@@ -187,7 +197,6 @@ func home(w http.ResponseWriter, r *http.Request) {
 		"Projects": result,
 		"Data":     Data,
 	}
-	fmt.Println(result)
 	tmpt.Execute(w, resData)
 
 }
@@ -234,6 +243,9 @@ func formProject(w http.ResponseWriter, r *http.Request) {
 	tmpt.Execute(w, Data)
 }
 
+// SELECT name FROM tb_user
+// LEFT JOIN tb_projects ON tb_user.id = tb_projects.id;
+
 func addProject(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 
@@ -245,6 +257,9 @@ func addProject(w http.ResponseWriter, r *http.Request) {
 	content := r.PostForm.Get("content")
 	dateStart := r.PostForm.Get("date-start")
 	dateEnd := r.PostForm.Get("date-end")
+
+	dataContext := r.Context().Value("dataImages")
+	image := dataContext.(string)
 
 	nodeJs := r.PostForm.Get("nodeJs")
 	nextJs := r.PostForm.Get("nextJs")
@@ -258,20 +273,18 @@ func addProject(w http.ResponseWriter, r *http.Request) {
 		javascript,
 	}
 
-	_, errQuery := connection.Conn.Exec(context.Background(), "INSERT INTO public.tb_projects(title, start_date, end_date, description, technologies) VALUES ($1, $2, $3, $4, $5)", title, dateStart, dateEnd, content, checked)
+	var store = sessions.NewCookieStore([]byte("SESSIONS_ID"))
+	session, _ := store.Get(r, "SESSIONS_ID")
+
+	userPost := session.Values["Id"]
+
+	fmt.Println(userPost)
+
+	_, errQuery := connection.Conn.Exec(context.Background(), "INSERT INTO public.tb_projects(title, start_date, end_date, description, technologies, image, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7)", title, dateStart, dateEnd, content, checked, image, userPost)
 	if errQuery != nil {
 		fmt.Println("Message : " + errQuery.Error())
 		return
 	}
-
-	// var newProject = Project{
-	// 	DateStartEdit: dateStart,
-	// 	DateEndEdit: dateEnd,
-	// }
-
-	// projects = append(projects, newProject)
-
-	fmt.Println(dateStart)
 
 	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
@@ -545,15 +558,19 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Message :" + err.Error()))
-		return
+		DataErr.Er = "Password Wrong"
+		DataErr.InputInvalid = "is-invalid"
+		t := template.Must(template.ParseFiles("views/login.html"))
+		Data := map[string]interface{}{
+			"DataErr": DataErr,
+		}
+		t.Execute(w, Data)
 	}
 
-	fmt.Println(user)
 	session.Values["IsLogin"] = true
 	session.Values["Names"] = user.Name
-	session.Options.MaxAge = 10800
+	session.Values["Id"] = user.Id
+	session.Options.MaxAge = 30
 
 	session.AddFlash("Successfully login", "message")
 	session.Save(r, w)
