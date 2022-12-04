@@ -34,7 +34,8 @@ func main() {
 	// route.HandleFunc("/add-project", addProject).Methods("POST")
 	route.HandleFunc("/delete-project/{index}", deleteProject).Methods("GET")
 	route.HandleFunc("/edit-project/{index}", formEditProject).Methods("GET")
-	route.HandleFunc("/edit-project/{index}", editProject).Methods("POST")
+	// route.HandleFunc("/edit-project/{index}", editProject).Methods("POST")
+	route.HandleFunc("/edit-project/{index}", middleware.UploadFile(editProject)).Methods("POST")
 
 	route.HandleFunc("/register", formRegister).Methods("GET")
 	route.HandleFunc("/register", register).Methods("POST")
@@ -73,7 +74,9 @@ type Project struct {
 	Title             string
 	Creator           string
 	DateStart         time.Time
+	DateStartEdit     string
 	DateEnd           time.Time
+	DateEndEdit       string
 	Duration          string
 	Month             float64
 	Format_date_start string
@@ -81,11 +84,20 @@ type Project struct {
 	Description       string
 	Image             string
 	Technologies      []string
+	NodeChecked       string
+	ReactChecked      string
+	NextChecked       string
+	JsChecked         string
 	NodeJs            string
 	ReactJs           string
 	NextJs            string
 	Javascript        string
 	IsLogin           bool
+}
+
+var DateInput = Project{
+	DateStartEdit: "",
+	DateEndEdit:   "",
 }
 
 type Login struct {
@@ -278,9 +290,7 @@ func addProject(w http.ResponseWriter, r *http.Request) {
 
 	userPost := session.Values["Id"]
 
-	fmt.Println(userPost)
-
-	_, errQuery := connection.Conn.Exec(context.Background(), "INSERT INTO public.tb_projects(title, start_date, end_date, description, technologies, image, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7)", title, dateStart, dateEnd, content, checked, image, userPost)
+	_, errQuery := connection.Conn.Exec(context.Background(), "INSERT INTO tb_projects(title, start_date, end_date, description, technologies, image, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7)", title, dateStart, dateEnd, content, checked, image, userPost)
 	if errQuery != nil {
 		fmt.Println("Message : " + errQuery.Error())
 		return
@@ -301,21 +311,50 @@ func formEditProject(w http.ResponseWriter, r *http.Request) {
 	index, _ := strconv.Atoi(mux.Vars(r)["index"])
 
 	var ProjectEdit = Project{}
+	var formChecked = Project{
+		NodeChecked:  "",
+		ReactChecked: "",
+		NextChecked:  "",
+		JsChecked:    "",
+	}
 
-	err = connection.Conn.QueryRow(context.Background(), "SELECT id, title, start_date, end_date, description FROM tb_projects WHERE id = $1", index).Scan(&ProjectEdit.ID, &ProjectEdit.Title, &ProjectEdit.DateStart, &ProjectEdit.DateEnd, &ProjectEdit.Description)
+	err = connection.Conn.QueryRow(context.Background(), "SELECT id, title, start_date, end_date, description, technologies FROM tb_projects WHERE id = $1", index).Scan(&ProjectEdit.ID, &ProjectEdit.Title, &ProjectEdit.DateStart, &ProjectEdit.DateEnd, &ProjectEdit.Description, &ProjectEdit.Technologies)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("message : " + err.Error()))
 	}
 
-	// ProjectEdit.nodeJs = ProjectEdit.Technologies[0]
+	// checked condition
+	if ProjectEdit.Technologies[0] == "nodejs" {
+		formChecked.NodeChecked = "checked"
+	} else {
+		formChecked.NodeChecked = ""
+	}
+	if ProjectEdit.Technologies[1] == "nextjs" {
+		formChecked.NextChecked = "checked"
+	} else {
+		formChecked.NextChecked = ""
+	}
+	if ProjectEdit.Technologies[2] == "react" {
+		formChecked.ReactChecked = "checked"
+	} else {
+		formChecked.ReactChecked = ""
+	}
+	if ProjectEdit.Technologies[3] == "javascript" {
+		formChecked.JsChecked = "checked"
+	} else {
+		formChecked.JsChecked = ""
+	}
 
-	ProjectEdit.Format_date_start = ProjectEdit.DateStart.Format("2 January 2006")
-	ProjectEdit.Format_date_end = ProjectEdit.DateEnd.Format("2 January 2006")
+	ProjectEdit.DateStartEdit = ProjectEdit.DateStart.Format("2006-01-02")
+	ProjectEdit.DateEndEdit = ProjectEdit.DateEnd.Format("2006-01-02")
+
+	fmt.Println(ProjectEdit.DateStartEdit)
 
 	dataEdit := map[string]interface{}{
-		"Project": ProjectEdit,
+		"Project":     ProjectEdit,
+		"FormChecked": formChecked,
 	}
 
 	tmpt.Execute(w, dataEdit)
@@ -335,24 +374,33 @@ func editProject(w http.ResponseWriter, r *http.Request) {
 	dateStart := r.PostForm.Get("date-start")
 	dateEnd := r.PostForm.Get("date-end")
 
+	dataContext := r.Context().Value("dataImages")
+	image := dataContext.(string)
+
+	nodeJs := r.PostForm.Get("nodeJs")
+	nextJs := r.PostForm.Get("nextJs")
+	reactJs := r.PostForm.Get("reactJs")
+	javascript := r.PostForm.Get("javascript")
+
+	checked := []string{
+		nodeJs,
+		nextJs,
+		reactJs,
+		javascript,
+	}
+
+	var store = sessions.NewCookieStore([]byte("SESSIONS_ID"))
+	session, _ := store.Get(r, "SESSIONS_ID")
+
+	userPost := session.Values["Id"]
+
 	_, errQuery := connection.Conn.Exec(context.Background(),
-		"UPDATE public.tb_projects SET title=$1, start_date=$2, end_date=$3, description=$4 WHERE id = $5", title, dateStart, dateEnd, content, index)
+		"UPDATE public.tb_projects SET title=$1, start_date=$2, end_date=$3, description=$4, technologies=$5, image=$6, user_id=$7 WHERE id = $8", title, dateStart, dateEnd, content, checked, image, userPost, index)
 	if errQuery != nil {
 		fmt.Println("Message : " + errQuery.Error())
 		return
 	}
 
-	// var newProject = Project{
-	// 	Title:       title,
-	// 	Description: content,
-	// 	DateStart:   dateStart,
-	// 	DateEnd:     dateEnd,
-	// }
-
-	// // projects = append(projects, newProject)
-	// projects[index] = newProject
-
-	// fmt.Println(index)
 	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
 
@@ -369,7 +417,7 @@ func projectDetail(w http.ResponseWriter, r *http.Request) {
 
 	var each = Project{}
 
-	err = connection.Conn.QueryRow(context.Background(), "SELECT id, title, start_date, end_date, description, technologies FROM tb_projects WHERE id = $1", id).Scan(&each.ID, &each.Title, &each.DateStart, &each.DateEnd, &each.Description, &each.Technologies)
+	err = connection.Conn.QueryRow(context.Background(), "SELECT id, title, start_date, end_date, description, technologies, image FROM tb_projects WHERE id = $1", id).Scan(&each.ID, &each.Title, &each.DateStart, &each.DateEnd, &each.Description, &each.Technologies, &each.Image)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

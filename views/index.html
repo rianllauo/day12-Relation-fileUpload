@@ -32,14 +32,16 @@
                <div class="d-flex align-items-center">
                   {{if .Data.IsLogin}}
                      <div class="d-flex align-items-center">
-                        <p class="mb-0 me-3 fs-6">Hello, {{.Data.UserName}}</p>
-                        <a href="/logout" class="link-danger fw-semibold">Logout</a>
+                        <p class="mb-0 me-2 fs-6">Hello, {{.Data.UserName}}</p>
+                        <span>|</span>
+                        <a href="/logout" class="ms-2 link-danger fw-semibold">Logout</a>
                      </div>
                     
                   {{else}}
                      <div class="d-flex align-items-center">
-                        <a href="/register" class=" me-3">Register</a>
-                        <a href="/login" class="">Login</a>
+                        <a href="/register" class=" me-2 fw-semibold nav-link" style="text-decoration: none;">Register</a>
+                        <span>|</span>
+                        <a href="/login" class="ms-2 fw-semibold active" style="text-decoration: none;">Login</a>
                      </div>
                   {{end}}   
                </div>
@@ -120,21 +122,17 @@
          {{range $index, $data := .Projects}}
 
          <div class="card" style="width: 20rem;">
-            <img src="/uploads/{{$data.Image}}" class="card-img-top" alt="content">
+            <img src="/uploads/{{$data.Image}}" class="card-img-top" alt="content" width="100%"
+            height="213px" style="object-fit: cover;">
             <div class="card-body fs-6">
                <a href="/project-detail/{{$data.ID}}" class="card-title fs-5">
                   {{$data.Title}}
                </a>
-               
                <p>Creator : {{$data.Creator}}</p>
                <p>Durasi : {{$data.Duration}}</p>
-               <!-- <p>Durasi : {{$data.Month}} Month </p>? -->
-
-
                <p class="card-text">
                   {{$data.Description}}
                </p>
-
                <div class="d-flex gap-2">
                   <img src="public/img/{{$data.NodeJs}}" class="{{$data.NodeJs}}" style="width: 28px;"  alt="" >
                   <img src="public/img/{{$data.NextJs}}" class="{{$data.NextJs}}"  style="width: 28px;" alt="">
